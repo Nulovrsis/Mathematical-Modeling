@@ -7,7 +7,6 @@ from scipy import signal, stats
 import sys
 import os
 import matplotlib
-import platform
 import warnings
 from matplotlib.font_manager import fontManager, FontProperties
 
@@ -25,30 +24,15 @@ def setup_chinese_fonts():
     matplotlib.rcdefaults()
     plt.rcdefaults()
     
-    # 获取系统类型并设置字体优先级
-    system = platform.system()
-    if system == "Windows":
-        font_candidates = [
-            'Microsoft YaHei UI',
-            'Microsoft YaHei', 
-            'SimHei', 
-            'SimSun',
-            'FangSong',
-            'KaiTi'
-        ]
-    elif system == "Darwin":  # macOS
-        font_candidates = [
-            'PingFang SC',
-            'Arial Unicode MS', 
-            'Heiti TC', 
-            'STHeiti'
-        ]
-    else:  # Linux
-        font_candidates = [
-            'WenQuanYi Micro Hei',
-            'WenQuanYi Zen Hei', 
-            'Droid Sans Fallback'
-        ]
+    # Windows系统中文字体优先级
+    font_candidates = [
+        'Microsoft YaHei UI',
+        'Microsoft YaHei', 
+        'SimHei', 
+        'SimSun',
+        'FangSong',
+        'KaiTi'
+    ]
     
     # 查找可用的中文字体
     available_fonts = []
