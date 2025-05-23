@@ -4,18 +4,97 @@ import matplotlib.pyplot as plt
 import scipy.optimize as optimize
 from scipy import stats
 import matplotlib.ticker as mtick
-from matplotlib import font_manager
+from matplotlib.font_manager import fontManager, FontProperties
 import matplotlib as mpl
 import sys
 import os
+import warnings
 
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # 导入配置
 from config import DATA_PATHS, VISUALIZATION_PATHS, MODEL_PARAMS
 
+# ==================== 字体配置 ====================
+
+def setup_chinese_fonts():
+    """设置中文字体和数学公式渲染"""
+    
+    # 清除matplotlib的字体缓存并重置
+    mpl.rcdefaults()
+    plt.rcdefaults()
+    
+    # Windows系统中文字体优先级
+    font_candidates = [
+        'Microsoft YaHei UI',
+        'Microsoft YaHei', 
+        'SimHei', 
+        'SimSun',
+        'FangSong',
+        'KaiTi'
+    ]
+    
+    # 查找可用的中文字体
+    available_fonts = []
+    for font_name in font_candidates:
+        # 检查字体是否存在
+        font_files = [f for f in fontManager.ttflist if font_name in f.name]
+        if font_files:
+            available_fonts.append(font_name)
+    
+    # 设置字体
+    if available_fonts:
+        chosen_font = available_fonts[0]
+        print(f"使用字体: {chosen_font}")
+        
+        # 设置matplotlib全局字体参数
+        plt.rcParams['font.sans-serif'] = [chosen_font] + available_fonts + ['DejaVu Sans']
+        plt.rcParams['font.family'] = 'sans-serif'
+        
+        # 同步设置matplotlib后端参数
+        mpl.rcParams['font.sans-serif'] = [chosen_font] + available_fonts + ['DejaVu Sans'] 
+        mpl.rcParams['font.family'] = 'sans-serif'
+        
+    else:
+        print("警告: 未找到中文字体，使用默认字体")
+        plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
+        mpl.rcParams['font.sans-serif'] = ['DejaVu Sans']
+    
+    # 设置其他字体参数
+    plt.rcParams['axes.unicode_minus'] = False  # 正确显示负号
+    plt.rcParams['font.size'] = 12
+    
+    # 数学公式字体设置 - 使用更兼容的字体
+    plt.rcParams['mathtext.fontset'] = 'dejavusans'  # 改为dejavusans避免渲染问题
+    plt.rcParams['mathtext.default'] = 'regular'
+    
+    # 同步到matplotlib全局设置
+    mpl.rcParams['axes.unicode_minus'] = False
+    mpl.rcParams['font.size'] = 12
+    mpl.rcParams['mathtext.fontset'] = 'dejavusans'
+    mpl.rcParams['mathtext.default'] = 'regular'
+    
+    # 测试中文显示
+    try:
+        fig, ax = plt.subplots(figsize=(1, 1))
+        ax.text(0.5, 0.5, '测试中文', ha='center', va='center')
+        plt.close(fig)
+        print("中文字体测试通过")
+    except Exception as e:
+        print(f"中文字体测试失败: {e}")
+    
+    return plt.rcParams['font.sans-serif'][0]
+
+# 初始化字体设置
+print("正在设置字体...")
+current_font = setup_chinese_fonts()
+
+# 抑制matplotlib字体警告
+warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+
 # 设置更优美的风格
 plt.style.use('seaborn-v0_8-whitegrid')
+
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置默认字体为黑体
 plt.rcParams['axes.unicode_minus'] = False    # 解决保存图像时负号显示问题
 plt.rcParams['mathtext.fontset'] = 'stix'     # 使用STIX字体渲染数学符号
@@ -357,21 +436,65 @@ ax.legend(fontsize=12, loc='upper right')
 ax.xaxis.set_major_locator(plt.MultipleLocator(5))
 ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.3f'))
 
-# 最佳模型公式
+# 最佳模型公式 - 修复公式渲染问题
 if best_model == "二次多项式模型":
-    equation = f'r(T) = {a:.6f}·T² + {b:.6f}·T + {c:.6f}'
-    ax.text(0.05, 0.05, f"最佳模型: {best_model}\n{equation}", 
-           transform=ax.transAxes, fontsize=12, 
-           bbox=dict(facecolor='white', edgecolor='gray', alpha=0.8, boxstyle='round,pad=0.5'))
+    # 避免使用数学符号，使用普通文本
+    if a >= 0:
+        sign_a = "+"
+    else:
+        sign_a = ""
+    if b >= 0:
+        sign_b = "+"
+    else:
+        sign_b = ""
+    if c >= 0:
+        sign_c = "+"
+    else:
+        sign_c = ""
+    
+    equation = f'r(T) = {a:.6f}T² {sign_b}{b:.6f}T {sign_c}{c:.6f}'
+    ax.text(0.05, 0.95, f"最佳模型: {best_model}\n{equation}", 
+           transform=ax.transAxes, fontsize=11, 
+           verticalalignment='top',
+           bbox=dict(facecolor='white', edgecolor='gray', alpha=0.9, boxstyle='round,pad=0.5'))
+
 elif best_model == "Cardinal温度模型":
-    equation = f'r(T) = 特征温度模型\nT_min = {T_min:.2f}°C, T_opt = {T_opt:.2f}°C, T_max = {T_max:.2f}°C'
-    ax.text(0.05, 0.05, f"最佳模型: {best_model}\n{equation}", 
-           transform=ax.transAxes, fontsize=12, 
-           bbox=dict(facecolor='white', edgecolor='gray', alpha=0.8, boxstyle='round,pad=0.5'))
+    # 使用简化的文本描述
+    equation_text = (f'Cardinal温度模型\n'
+                    f'r_opt = {r_opt:.4f} h⁻¹\n'
+                    f'T_min = {T_min:.1f}°C\n'
+                    f'T_opt = {T_opt:.1f}°C\n'
+                    f'T_max = {T_max:.1f}°C')
+    ax.text(0.05, 0.95, f"最佳模型: {best_model}\n{equation_text}", 
+           transform=ax.transAxes, fontsize=11,
+           verticalalignment='top',
+           bbox=dict(facecolor='white', edgecolor='gray', alpha=0.9, boxstyle='round,pad=0.5'))
+
+else:  # Ratkowsky模型
+    equation_text = (f'Ratkowsky模型\n'
+                    f'b = {b_rat:.6f}\n'
+                    f'T_min = {T_min_rat:.1f}°C\n'
+                    f'T_max = {T_max_rat:.1f}°C')
+    ax.text(0.05, 0.95, f"最佳模型: {best_model}\n{equation_text}", 
+           transform=ax.transAxes, fontsize=11,
+           verticalalignment='top',
+           bbox=dict(facecolor='white', edgecolor='gray', alpha=0.9, boxstyle='round,pad=0.5'))
+
+# 确保Y轴标签正确显示
+ax.set_ylabel('增殖速率 r (h⁻¹)', fontsize=14)
 
 # 优化布局
 plt.tight_layout()
-plt.savefig(VISUALIZATION_PATHS['growth_rate_plot'], dpi=300, bbox_inches='tight')
+
+# 在main函数或适当位置添加中文文件名路径配置
+CHINESE_VISUALIZATION_PATHS = {
+    'growth_rate_plot': 'outputs\\温度与细菌增殖速率关系图.png',
+    'growth_curves': 'outputs\\不同温度下细菌生长曲线对比图.png'
+}
+
+# 保存温度-增殖速率关系图
+plt.savefig(CHINESE_VISUALIZATION_PATHS['growth_rate_plot'], dpi=300, bbox_inches='tight')
+print(f"温度与增殖速率关系图已保存: {CHINESE_VISUALIZATION_PATHS['growth_rate_plot']}")
 
 # 绘制不同温度下的细菌生长曲线
 plt.figure(figsize=(14, 10))
@@ -424,7 +547,8 @@ plt.legend(fontsize=12, loc='upper left')
 # 优化布局
 plt.tight_layout()
 
-# 保存图像
-plt.savefig(VISUALIZATION_PATHS['growth_curves'], dpi=300, bbox_inches='tight')
+# 保存不同温度下的生长曲线图
+plt.savefig(CHINESE_VISUALIZATION_PATHS['growth_curves'], dpi=300, bbox_inches='tight')
+print(f"细菌生长曲线对比图已保存: {CHINESE_VISUALIZATION_PATHS['growth_curves']}")
 
-print("图表已生成完成！")
+print("所有图表已生成完成！")

@@ -40,20 +40,20 @@ def ratkowsky_model(T, b, T_min, T_max):
 
 # 模型参数值
 quadratic_params = {}
-quadratic_params['a'] = 0.0005740290670658184
-quadratic_params['b'] = -0.025524382882706635
-quadratic_params['c'] = 0.783364102618257
+quadratic_params['a'] = 0.0005740290648579283
+quadratic_params['b'] = -0.025524382788736588
+quadratic_params['c'] = 0.783364101693672
 
 cardinal_params = {}
-cardinal_params['r_opt'] = 0.4682379599136571
-cardinal_params['T_min'] = 13.451697626707455
-cardinal_params['T_opt'] = 29.99999999999889
+cardinal_params['r_opt'] = 0.4682379593240666
+cardinal_params['T_min'] = 13.451697563194791
+cardinal_params['T_opt'] = 29.999999999998895
 cardinal_params['T_max'] = 44.99999999999999
 
 ratkowsky_params = {}
-ratkowsky_params['b'] = 0.05247987393418528
+ratkowsky_params['b'] = 0.0524798739559453
 ratkowsky_params['T_min'] = 5.000000000000001
-ratkowsky_params['T_max'] = 37.60775599799783
+ratkowsky_params['T_max'] = 37.60775599040646
 
 # 最佳模型信息
 best_model_name = '二次多项式模型'

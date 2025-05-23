@@ -483,30 +483,29 @@ else:
             
             # 重新定义中文文件名路径
             CHINESE_VISUALIZATION_PATHS = {
-                'bacterial_count': 'outputs\\细菌数量与环境因素变化图.png',
-                'model_comparison': 'outputs\\种群增长模型比较图.png',
+                'bacterial_count': 'outputs\\细菌lnN与环境因素变化图.png',
                 'growth_rate_change': 'outputs\\细菌增长率变化图.png'
             }
             
             # 确保字体设置生效
             setup_chinese_fonts()
             
-            # 1. 细菌数量与温度随时间变化图（不再显示ln(N)）
+            # 1. 细菌lnN与温度随时间变化图（使用对数坐标）
             fig, ax1 = plt.subplots(figsize=(14, 8))
-            
-            # 左侧Y轴：细菌数量（线性坐标）
+
+            # 左侧Y轴：细菌数量（对数坐标）
             ax1.set_xlabel('时间 (h)', fontsize=14)
-            ax1.set_ylabel('细菌数量 (CFU)', fontsize=14, color='tab:blue')
-            ax1.plot(time_points, N_values, color='tab:blue', linewidth=2.5, label='细菌数量')
+            ax1.set_ylabel('ln(细菌数量) ln(CFU)', fontsize=14, color='tab:blue')
+            ax1.plot(time_points, lnN_values, color='tab:blue', linewidth=2.5, label='ln(细菌数量)')
             ax1.tick_params(axis='y', labelcolor='tab:blue')
             ax1.grid(True, linestyle='--', alpha=0.7)
-            
+
             # 右侧Y轴：温度
             ax2 = ax1.twinx()
             ax2.set_ylabel('温度 (°C)', fontsize=14, color='tab:red')
             ax2.plot(time_points, temp_values, color='tab:red', linewidth=2, label='温度')
             ax2.tick_params(axis='y', labelcolor='tab:red')
-            
+
             # 如果有湿度数据，添加湿度曲线
             if has_humidity_data:
                 ax3 = ax1.twinx()
@@ -525,47 +524,16 @@ else:
                 lines1, labels1 = ax1.get_legend_handles_labels()
                 lines2, labels2 = ax2.get_legend_handles_labels()
                 ax2.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
-            
-            plt.title('病原细菌数量与环境因素随时间变化', fontsize=16, fontweight='bold')
+
+            plt.title('病原细菌ln(N)与环境因素随时间变化', fontsize=16, fontweight='bold')
             plt.grid(True)
             plt.tight_layout()
             plt.savefig(CHINESE_VISUALIZATION_PATHS['bacterial_count'], dpi=300)
-            print(f"  细菌数量与环境因素变化图已保存: {CHINESE_VISUALIZATION_PATHS['bacterial_count']}")
-            
-            # 3. 不同模型比较图（优化版）
+            print(f"  细菌ln(N)与环境因素变化图已保存: {CHINESE_VISUALIZATION_PATHS['bacterial_count']}")
+
+            # 2. 增殖速率与环境因素关系图
             plt.figure(figsize=(14, 8))
-            
-            # 只显示前8小时，放大早期差异
-            show_range = time_points <= 8
-            
-            # 颜色和线型设置
-            model_styles = {
-                '基础指数模型': {'color': 'tab:blue', 'linestyle': '-', 'linewidth': 2.5},
-                '考虑死亡率': {'color': 'tab:orange', 'linestyle': '--', 'linewidth': 2.5},
-                '考虑环境承载量': {'color': 'tab:green', 'linestyle': '-.', 'linewidth': 2.5},
-                '完整模型': {'color': 'tab:red', 'linestyle': '-', 'linewidth': 3.5}
-            }
-            
-            for variant_name, result in model_results.items():
-                style = model_styles.get(variant_name, {'color': None, 'linestyle': '-', 'linewidth': 2})
-                plt.plot(time_points[show_range], result[show_range],
-                         label=variant_name,
-                         color=style['color'],
-                         linestyle=style['linestyle'],
-                         linewidth=style['linewidth'])
-            
-            plt.xlabel('时间 (h)', fontsize=14)
-            plt.ylabel('细菌数量 (CFU)', fontsize=14)
-            plt.title('不同种群增长模型比较（前8小时）', fontsize=16, fontweight='bold')
-            plt.grid(True, linestyle='--', alpha=0.7)
-            plt.legend(fontsize=12, loc='upper left')
-            plt.tight_layout()
-            plt.savefig(CHINESE_VISUALIZATION_PATHS['model_comparison'], dpi=300)
-            print(f"  种群增长模型比较图已保存: {CHINESE_VISUALIZATION_PATHS['model_comparison']}")
-            
-            # 4. 增殖速率与环境因素关系图
-            plt.figure(figsize=(14, 8))
-            
+
             plt.plot(time_points, growth_rates, 'b-', linewidth=2, label='基础增殖速率 r(T)')
             plt.plot(time_points, net_growth_rates, 'g-', linewidth=2, label='净增长率')
             plt.plot(time_points, effective_growth_rates, 'r-', linewidth=2, label='有效增长率')
