@@ -386,11 +386,11 @@ ax.scatter(temps, growth_rates, color='black', s=100, marker='o',
 
 # 绘制模型曲线
 ax.plot(fine_temps, quadratic_rates, 'r-', linewidth=2, 
-       label=f'二次多项式模型 (R²={quadratic_r2:.4f})')
+       label=rf'二次多项式模型 ($R^2$={quadratic_r2:.4f})')
 ax.plot(fine_temps, cardinal_rates, 'g-', linewidth=2, 
-       label=f'Cardinal温度模型 (R²={cardinal_r2:.4f})')
+       label=rf'Cardinal温度模型 ($R^2$={cardinal_r2:.4f})')
 ax.plot(fine_temps, ratkowsky_rates, 'b-', linewidth=2, 
-       label=f'Ratkowsky模型 (R²={ratkowsky_r2:.4f})')
+       label=rf'Ratkowsky模型 ($R^2$={ratkowsky_r2:.4f})')
 
 # 突出显示最适生长温度
 try:
@@ -398,15 +398,20 @@ try:
     max_idx = np.argmax(cardinal_rates)
     max_temp = fine_temps[max_idx]
     max_rate = cardinal_rates[max_idx]
+    
+    # 使用星号标记最佳温度点
     ax.scatter([max_temp], [max_rate], color='green', s=150, marker='*', 
               edgecolor='black', linewidth=1.5, zorder=11,
-              label=f'最适生长温度 ({max_temp:.1f}°C)')
-    ax.annotate(f'T_opt = {max_temp:.1f}°C\nr_max = {max_rate:.4f} h⁻¹', 
+              label=rf'最适生长温度 ({max_temp:.1f}°C)')
+    
+    # 使用mathtext格式标注最适温度
+    annotation_text = rf'$T_{{opt}} = {max_temp:.1f}°C$' + '\n' + rf'$r_{{max}} = {max_rate:.4f}$ $h^{{-1}}$'
+    ax.annotate(annotation_text, 
                xy=(max_temp, max_rate), xytext=(max_temp+3, max_rate),
                arrowprops=dict(facecolor='black', shrink=0.05, width=1.5, headwidth=8),
                fontsize=12, bbox=dict(boxstyle="round,pad=0.5", fc="white", ec="gray", alpha=0.8))
-except:
-    print("无法确定Cardinal模型的最大值点")
+except Exception as e:
+    print(f"无法确定Cardinal模型的最大值点: {e}")
 
 # 标记有效温度范围
 if best_model == "Cardinal温度模型" or best_model == "Ratkowsky模型":
@@ -421,7 +426,7 @@ if best_model == "Cardinal温度模型" or best_model == "Ratkowsky模型":
 
 # 设置坐标轴标签和标题
 ax.set_xlabel('温度 (°C)', fontsize=14)
-ax.set_ylabel('增殖速率 r (h⁻¹)', fontsize=14)
+ax.set_ylabel(r'增殖速率 r ($h^{-1}$)', fontsize=14)
 ax.set_title('温度(T)与病原细菌增殖速率(r)的关系模型比较', fontsize=16, fontweight='bold')
 
 # 设置坐标轴范围和网格
@@ -438,33 +443,21 @@ ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.3f'))
 
 # 最佳模型公式 - 修复公式渲染问题
 if best_model == "二次多项式模型":
-    # 避免使用数学符号，使用普通文本
-    if a >= 0:
-        sign_a = "+"
-    else:
-        sign_a = ""
-    if b >= 0:
-        sign_b = "+"
-    else:
-        sign_b = ""
-    if c >= 0:
-        sign_c = "+"
-    else:
-        sign_c = ""
+    # 处理系数符号，使正确显示加减符号
+    term_b = f"- {abs(b):.6f}T" if b < 0 else f"+ {b:.6f}T"
+    term_c = f"- {abs(c):.6f}" if c < 0 else f"+ {c:.6f}"
     
-    equation = f'r(T) = {a:.6f}T² {sign_b}{b:.6f}T {sign_c}{c:.6f}'
+    equation = rf'$r(T) = {a:.6f}T^2 {term_b} {term_c}$'
     ax.text(0.05, 0.95, f"最佳模型: {best_model}\n{equation}", 
            transform=ax.transAxes, fontsize=11, 
            verticalalignment='top',
            bbox=dict(facecolor='white', edgecolor='gray', alpha=0.9, boxstyle='round,pad=0.5'))
 
 elif best_model == "Cardinal温度模型":
-    # 使用简化的文本描述
     equation_text = (f'Cardinal温度模型\n'
-                    f'r_opt = {r_opt:.4f} h⁻¹\n'
-                    f'T_min = {T_min:.1f}°C\n'
-                    f'T_opt = {T_opt:.1f}°C\n'
-                    f'T_max = {T_max:.1f}°C')
+                    rf'$T_{{min}} = {T_min:.1f}°C$\n'
+                    rf'$T_{{opt}} = {T_opt:.1f}°C$\n'
+                    rf'$T_{{max}} = {T_max:.1f}°C$')
     ax.text(0.05, 0.95, f"最佳模型: {best_model}\n{equation_text}", 
            transform=ax.transAxes, fontsize=11,
            verticalalignment='top',
@@ -472,9 +465,9 @@ elif best_model == "Cardinal温度模型":
 
 else:  # Ratkowsky模型
     equation_text = (f'Ratkowsky模型\n'
-                    f'b = {b_rat:.6f}\n'
-                    f'T_min = {T_min_rat:.1f}°C\n'
-                    f'T_max = {T_max_rat:.1f}°C')
+                    rf'$b = {b_rat:.6f}$\n'
+                    rf'$T_{{min}} = {T_min_rat:.1f}°C$\n'
+                    rf'$T_{{max}} = {T_max_rat:.1f}°C$')
     ax.text(0.05, 0.95, f"最佳模型: {best_model}\n{equation_text}", 
            transform=ax.transAxes, fontsize=11,
            verticalalignment='top',
@@ -486,11 +479,16 @@ ax.set_ylabel('增殖速率 r (h⁻¹)', fontsize=14)
 # 优化布局
 plt.tight_layout()
 
-# 在main函数或适当位置添加中文文件名路径配置
+# --- 在绘制图表之前，确保完整的字体设置 ---
+
+# 重新定义中文文件名路径
 CHINESE_VISUALIZATION_PATHS = {
     'growth_rate_plot': 'outputs\\温度与细菌增殖速率关系图.png',
     'growth_curves': 'outputs\\不同温度下细菌生长曲线对比图.png'
 }
+
+# 确保字体设置生效
+setup_chinese_fonts()
 
 # 保存温度-增殖速率关系图
 plt.savefig(CHINESE_VISUALIZATION_PATHS['growth_rate_plot'], dpi=300, bbox_inches='tight')

@@ -539,7 +539,7 @@ else:
             plt.plot(time_points, effective_growth_rates, 'r-', linewidth=2, label='有效增长率')
             
             plt.xlabel('时间 (h)', fontsize=14)
-            plt.ylabel('增长率 (h⁻¹)', fontsize=14)
+            plt.ylabel(r'增殖速率 r ($h^{-1}$)', fontsize=14)
             plt.title('细菌增长率随时间变化', fontsize=16, fontweight='bold')
             plt.grid(True, linestyle='--', alpha=0.7)
             plt.legend(fontsize=12)
