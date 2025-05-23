@@ -393,6 +393,13 @@ def main():
     # 抑制matplotlib字体警告
     warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
     
+    # 重新定义中文文件名路径
+    CHINESE_VISUALIZATION_PATHS = {
+        'temperature_time_plot': 'outputs\\温室温度时序分析图.png',
+        'temperature_distribution': 'outputs\\温度分布直方图.png',
+        'temperature_sine_fit': 'outputs\\温度正弦拟合模型图.png'
+    }
+    
     # 1. 数据读取与预处理
     print("\n1. 数据读取与预处理...")
     
@@ -516,14 +523,18 @@ def main():
     # 9. 生成可视化图表
     print("\n9. 生成可视化图表...")
     try:
-        fig1 = create_temperature_time_plot(df, model_params, VISUALIZATION_PATHS['temperature_time_plot'])
-        print(f"  温度时序图已保存: {VISUALIZATION_PATHS['temperature_time_plot']}")
-        fig2 = create_temperature_distribution_plot(T, VISUALIZATION_PATHS['temperature_distribution'])
-        print(f"  温度分布图已保存: {VISUALIZATION_PATHS['temperature_distribution']}")
+        fig1 = create_temperature_time_plot(df, model_params, CHINESE_VISUALIZATION_PATHS['temperature_time_plot'])
+        print(f"  温度时序图已保存: {CHINESE_VISUALIZATION_PATHS['temperature_time_plot']}")
+        
+        fig2 = create_temperature_distribution_plot(T, CHINESE_VISUALIZATION_PATHS['temperature_distribution'])
+        print(f"  温度分布图已保存: {CHINESE_VISUALIZATION_PATHS['temperature_distribution']}")
+        
         if model_params is not None:
-            fig3 = create_model_components_plot(df, model_params, model_metrics, VISUALIZATION_PATHS['temperature_sine_fit'])
-            print(f"  模型拟合图已保存: {VISUALIZATION_PATHS['temperature_sine_fit']}")
+            fig3 = create_model_components_plot(df, model_params, model_metrics, CHINESE_VISUALIZATION_PATHS['temperature_sine_fit'])
+            print(f"  模型拟合图已保存: {CHINESE_VISUALIZATION_PATHS['temperature_sine_fit']}")
+        
         plt.show()
+        
     except Exception as e:
         print(f"图表生成出错: {e}")
     
