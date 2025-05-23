@@ -5,11 +5,88 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 import sys
+import matplotlib
+import warnings
+from matplotlib.font_manager import fontManager, FontProperties
 
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # 导入配置
 from config import DATA_PATHS, VISUALIZATION_PATHS, OUTPUT_PATHS, MODEL_PARAMS
+
+# ==================== 字体配置 ====================
+
+def setup_chinese_fonts():
+    """设置中文字体和数学公式渲染"""
+    
+    # 清除matplotlib的字体缓存并重置
+    matplotlib.rcdefaults()
+    plt.rcdefaults()
+    
+    # Windows系统中文字体优先级
+    font_candidates = [
+        'Microsoft YaHei UI',
+        'Microsoft YaHei', 
+        'SimHei', 
+        'SimSun',
+        'FangSong',
+        'KaiTi'
+    ]
+    
+    # 查找可用的中文字体
+    available_fonts = []
+    for font_name in font_candidates:
+        # 检查字体是否存在
+        font_files = [f for f in fontManager.ttflist if font_name in f.name]
+        if font_files:
+            available_fonts.append(font_name)
+    
+    # 设置字体
+    if available_fonts:
+        chosen_font = available_fonts[0]
+        print(f"使用字体: {chosen_font}")
+        
+        # 设置matplotlib全局字体参数
+        plt.rcParams['font.sans-serif'] = [chosen_font] + available_fonts + ['DejaVu Sans']
+        plt.rcParams['font.family'] = 'sans-serif'
+        
+        # 同步设置matplotlib后端参数
+        matplotlib.rcParams['font.sans-serif'] = [chosen_font] + available_fonts + ['DejaVu Sans'] 
+        matplotlib.rcParams['font.family'] = 'sans-serif'
+        
+    else:
+        print("警告: 未找到中文字体，使用默认字体")
+        plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
+        matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans']
+    
+    # 设置其他字体参数
+    plt.rcParams['axes.unicode_minus'] = False  # 正确显示负号
+    plt.rcParams['font.size'] = 12
+    
+    # 数学公式字体设置
+    plt.rcParams['mathtext.fontset'] = 'dejavusans'  # 使用兼容性更好的字体
+    plt.rcParams['mathtext.default'] = 'regular'
+    
+    # 同步到matplotlib全局设置
+    matplotlib.rcParams['axes.unicode_minus'] = False
+    matplotlib.rcParams['font.size'] = 12
+    matplotlib.rcParams['mathtext.fontset'] = 'dejavusans'
+    matplotlib.rcParams['mathtext.default'] = 'regular'
+    
+    # 测试中文显示
+    try:
+        fig, ax = plt.subplots(figsize=(1, 1))
+        ax.text(0.5, 0.5, '测试中文', ha='center', va='center')
+        plt.close(fig)
+        print("中文字体测试通过")
+    except Exception as e:
+        print(f"中文字体测试失败: {e}")
+    
+    return plt.rcParams['font.sans-serif'][0]
+
+# 初始化字体设置
+print("正在设置字体...")
+current_font = setup_chinese_fonts()
 
 # 尝试导入最佳增殖速率模型
 try:
@@ -400,10 +477,19 @@ else:
             # --- 可视化部分 ---
             
             print("\n生成可视化图表...")
-            plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS']
-            plt.rcParams['axes.unicode_minus'] = False
-            plt.rcParams['font.size'] = 12
-            plt.style.use('seaborn-v0_8-whitegrid')
+            
+            # 抑制matplotlib字体警告
+            warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+            
+            # 重新定义中文文件名路径
+            CHINESE_VISUALIZATION_PATHS = {
+                'bacterial_count': 'outputs\\细菌数量与环境因素变化图.png',
+                'model_comparison': 'outputs\\种群增长模型比较图.png',
+                'growth_rate_change': 'outputs\\细菌增长率变化图.png'
+            }
+            
+            # 确保字体设置生效
+            setup_chinese_fonts()
             
             # 1. 细菌数量与温度随时间变化图（不再显示ln(N)）
             fig, ax1 = plt.subplots(figsize=(14, 8))
@@ -443,7 +529,8 @@ else:
             plt.title('病原细菌数量与环境因素随时间变化', fontsize=16, fontweight='bold')
             plt.grid(True)
             plt.tight_layout()
-            plt.savefig(VISUALIZATION_PATHS['bacterial_count'], dpi=300)
+            plt.savefig(CHINESE_VISUALIZATION_PATHS['bacterial_count'], dpi=300)
+            print(f"  细菌数量与环境因素变化图已保存: {CHINESE_VISUALIZATION_PATHS['bacterial_count']}")
             
             # 3. 不同模型比较图（优化版）
             plt.figure(figsize=(14, 8))
@@ -473,7 +560,8 @@ else:
             plt.grid(True, linestyle='--', alpha=0.7)
             plt.legend(fontsize=12, loc='upper left')
             plt.tight_layout()
-            plt.savefig(VISUALIZATION_PATHS['model_comparison'], dpi=300)
+            plt.savefig(CHINESE_VISUALIZATION_PATHS['model_comparison'], dpi=300)
+            print(f"  种群增长模型比较图已保存: {CHINESE_VISUALIZATION_PATHS['model_comparison']}")
             
             # 4. 增殖速率与环境因素关系图
             plt.figure(figsize=(14, 8))
@@ -488,7 +576,10 @@ else:
             plt.grid(True, linestyle='--', alpha=0.7)
             plt.legend(fontsize=12)
             plt.tight_layout()
-            plt.savefig(VISUALIZATION_PATHS['growth_rate_change'], dpi=300)
+            plt.savefig(CHINESE_VISUALIZATION_PATHS['growth_rate_change'], dpi=300)
+            print(f"  细菌增长率变化图已保存: {CHINESE_VISUALIZATION_PATHS['growth_rate_change']}")
+            
+            plt.show()
             
             print("可视化图表生成完成！")
 
