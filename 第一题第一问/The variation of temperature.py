@@ -9,7 +9,7 @@ import os
 import matplotlib
 import platform
 import warnings
-from matplotlib.font_manager import fontManager
+from matplotlib.font_manager import fontManager, FontProperties
 
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,29 +20,75 @@ from config import DATA_PATHS, VISUALIZATION_PATHS, OUTPUT_PATHS
 
 def setup_chinese_fonts():
     """设置中文字体和数学公式渲染"""
+    
+    # 清除matplotlib的字体缓存并重置
+    matplotlib.rcdefaults()
+    plt.rcdefaults()
+    
+    # 获取系统类型并设置字体优先级
+    system = platform.system()
+    if system == "Windows":
+        font_candidates = [
+            'Microsoft YaHei UI',
+            'Microsoft YaHei', 
+            'SimHei', 
+            'SimSun',
+            'FangSong',
+            'KaiTi'
+        ]
+    elif system == "Darwin":  # macOS
+        font_candidates = [
+            'PingFang SC',
+            'Arial Unicode MS', 
+            'Heiti TC', 
+            'STHeiti'
+        ]
+    else:  # Linux
+        font_candidates = [
+            'WenQuanYi Micro Hei',
+            'WenQuanYi Zen Hei', 
+            'Droid Sans Fallback'
+        ]
+    
+    # 查找可用的中文字体
+    available_fonts = []
+    for font_name in font_candidates:
+        # 检查字体是否存在
+        font_files = [f for f in fontManager.ttflist if font_name in f.name]
+        if font_files:
+            available_fonts.append(font_name)
+    
+    # 设置字体
+    if available_fonts:
+        chosen_font = available_fonts[0]
+        print(f"使用字体: {chosen_font}")
+        
+        # 设置matplotlib全局字体参数
+        plt.rcParams['font.sans-serif'] = [chosen_font] + available_fonts + ['DejaVu Sans']
+        plt.rcParams['font.family'] = 'sans-serif'
+        
+        # 同步设置matplotlib后端参数
+        matplotlib.rcParams['font.sans-serif'] = [chosen_font] + available_fonts + ['DejaVu Sans'] 
+        matplotlib.rcParams['font.family'] = 'sans-serif'
+        
+    else:
+        print("警告: 未找到中文字体，使用默认字体")
+        plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
+        matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans']
+    
+    # 设置其他字体参数
     plt.rcParams['axes.unicode_minus'] = False  # 正确显示负号
     plt.rcParams['font.size'] = 12
     
-    # 优先使用支持中文的字体
-    system = platform.system()
-    if system == "Windows":
-        fonts = ['Microsoft YaHei', 'SimHei', 'SimSun', 'Arial Unicode MS']
-    elif system == "Darwin":  # macOS
-        fonts = ['Arial Unicode MS', 'Heiti TC', 'STHeiti', 'PingFang SC']
-    else:  # Linux
-        fonts = ['WenQuanYi Micro Hei', 'Droid Sans Fallback']
-    
-    available_fonts = [f for f in fonts if f in [font_name.name for font_name in fontManager.ttflist]]
-    
-    if available_fonts:
-        plt.rcParams['font.sans-serif'] = available_fonts
-        print(f"使用字体: {available_fonts[0]}")
-    else:
-        plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
-        print("警告: 未找到中文字体，使用默认字体")
-    
-    plt.rcParams['mathtext.fontset'] = 'stix'
+    # 数学公式字体设置
+    plt.rcParams['mathtext.fontset'] = 'dejavusans'  # 使用兼容性更好的字体
     plt.rcParams['mathtext.default'] = 'regular'
+    
+    # 同步到matplotlib全局设置
+    matplotlib.rcParams['axes.unicode_minus'] = False
+    matplotlib.rcParams['font.size'] = 12
+    matplotlib.rcParams['mathtext.fontset'] = 'dejavusans'
+    matplotlib.rcParams['mathtext.default'] = 'regular'
     
     # 测试中文显示
     try:
@@ -55,14 +101,8 @@ def setup_chinese_fonts():
     
     return plt.rcParams['font.sans-serif'][0]
 
-# 设置全局字体参数
-font_config = {
-    'family': 'serif',
-    'weight': 'normal', 
-    'size': 12
-}
-
-plt.rc('font', **font_config)
+# 初始化字体设置
+current_font = setup_chinese_fonts()
 
 # ==================== 数据处理函数 ====================
 
@@ -225,7 +265,12 @@ def analyze_temperature_periodicity(temperature_data, sampling_interval=5):
 
 def create_temperature_time_plot(df, model_params=None, save_path=None):
     """创建温度时序图"""
+    # 抑制字体警告
+    warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+    
+    # 确保字体设置生效
     setup_chinese_fonts()
+    
     plt.figure(figsize=(14, 8))
     plt.plot(df['分钟']/60, df['温度'], 'o', markersize=3, alpha=0.3, label='原始温度数据', color='lightblue')
     plt.plot(df['分钟']/60, df['温度_平滑'], '-', linewidth=2, label='平滑温度数据', color='blue')
@@ -273,7 +318,9 @@ def create_temperature_time_plot(df, model_params=None, save_path=None):
 
 def create_temperature_distribution_plot(temperature_data, save_path=None):
     """创建温度分布图"""
+    warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
     setup_chinese_fonts()
+    
     plt.figure(figsize=(10, 6))
     n, bins, patches = plt.hist(temperature_data, bins=20, color='skyblue', edgecolor='black', alpha=0.7, density=True)
     
@@ -301,7 +348,9 @@ def create_temperature_distribution_plot(temperature_data, save_path=None):
 
 def create_model_components_plot(df, model_params, model_metrics, save_path=None):
     """创建模型组件分解图"""
+    warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
     setup_chinese_fonts()
+    
     plt.figure(figsize=(12, 8))
     plt.scatter(df['分钟']/60, df['温度_平滑'], s=30, alpha=0.6, label='平滑温度数据', color='lightblue')
     
@@ -357,9 +406,11 @@ def main():
     print("温室温度变化分析程序")
     print("=" * 50)
     
+    # 抑制matplotlib字体警告
+    warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
+    
     # 1. 数据读取与预处理
     print("\n1. 数据读取与预处理...")
-    setup_chinese_fonts()
     
     try:
         temperature_file = DATA_PATHS['temperature_data']
